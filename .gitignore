@@ -1,0 +1,11 @@
+/*
+!/cmd/
+!/internal/
+!/pkg/
+!/vendor/
+!/.editorconfig
+!/.gitignore
+!/LICENSE
+!/README.md
+!/go.mod
+!/go.sum
