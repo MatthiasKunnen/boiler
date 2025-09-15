@@ -1,6 +1,7 @@
 /*
 !/cmd/
 !/internal/
+!/notes/
 !/pkg/
 !/vendor/
 !/.editorconfig
