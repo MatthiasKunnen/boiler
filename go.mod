@@ -6,6 +6,7 @@ require (
 	github.com/go-json-experiment/json v0.0.0-20250910080747-cc2cfa0554c3
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.10.0
+	golang.org/x/net v0.44.0
 )
 
 require (
