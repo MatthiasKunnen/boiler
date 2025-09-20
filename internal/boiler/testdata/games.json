@@ -1,0 +1,36 @@
+[
+	{
+		"Name": "Arma3",
+		"Id": 233780,
+		"BetaBranch": "creatordlc",
+		"WorkshopAppId": 107410,
+		"MakeWorkshopItemsLowercase": true,
+		"WorkshopItems": [
+			[
+				"463939057",
+				"ace"
+			],
+			[
+				"2950011244",
+				"Sail to South_Eastern Asia"
+			]
+		],
+		"WorkshopDependencyAdd": {
+			"2950011244": [
+				[
+					"11",
+					"add this"
+				]
+			]
+		},
+		"WorkshopDependencyRemove": {
+			"463939057": [
+				[
+					"12",
+					"remove this"
+				]
+			]
+		},
+		"WorkshopCollections": []
+	}
+]
