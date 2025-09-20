@@ -87,6 +87,9 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 		}
 	}
 
+	log.Printf("%d games will be updated", len(downOpts.DownloadGames))
+	log.Printf("%d workshop items will be updated", len(downOpts.DownloadWorkshopItems))
+
 	err := steamcmd.Exec(ctx, downOpts)
 	if err != nil {
 		return err
