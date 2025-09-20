@@ -2,10 +2,12 @@ package boiler
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/go-json-experiment/json/jsontext"
 )
 
-// IdWithComment is parsed from a [uint64, string] or uint64 in JSON.
+// IdWithComment is parsed from a [string, string] or string in JSON.
 type IdWithComment struct {
 	Id      uint64
 	Comment string
@@ -15,7 +17,7 @@ func (c *IdWithComment) MarshalJSONTo(enc *jsontext.Encoder) error {
 	if err := enc.WriteToken(jsontext.BeginArray); err != nil {
 		return err
 	}
-	if err := enc.WriteToken(jsontext.Uint(c.Id)); err != nil {
+	if err := enc.WriteToken(jsontext.String(strconv.FormatUint(c.Id, 10))); err != nil {
 		return err
 	}
 	if err := enc.WriteToken(jsontext.String(c.Comment)); err != nil {
@@ -44,10 +46,13 @@ func (c *IdWithComment) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 			return err
 		}
 
-		if token.Kind() == '0' {
-			c.Id = token.Uint()
+		if token.Kind() == '"' {
+			c.Id, err = strconv.ParseUint(token.String(), 10, 64)
+			if err != nil {
+				return err
+			}
 		} else {
-			return fmt.Errorf("first array element must be a number")
+			return fmt.Errorf("first array element must be a string")
 		}
 
 		// Check if there's a second element (comment)
@@ -74,13 +79,17 @@ func (c *IdWithComment) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 		}
 
 		return nil
-	case '0': // Only number
+	case '"': // Only number
 		token, err := dec.ReadToken()
 		if err != nil {
 			return err
 		}
 
-		c.Id = token.Uint()
+		c.Id, err = strconv.ParseUint(token.String(), 10, 64)
+		if err != nil {
+			return err
+		}
+
 		c.Comment = ""
 		return nil
 	default:

@@ -1,10 +1,11 @@
 package boiler_test
 
 import (
+	"testing"
+
 	"github.com/MatthiasKunnen/boiler/internal/boiler"
 	"github.com/go-json-experiment/json"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestCommentedId_Marshal(t *testing.T) {
@@ -16,27 +17,27 @@ func TestCommentedId_Marshal(t *testing.T) {
 		{
 			name:     "with comment",
 			input:    boiler.IdWithComment{Id: 123, Comment: "test comment"},
-			expected: `[123,"test comment"]`,
+			expected: `["123","test comment"]`,
 		},
 		{
 			name:     "empty comment",
 			input:    boiler.IdWithComment{Id: 456, Comment: ""},
-			expected: `[456,""]`,
+			expected: `["456",""]`,
 		},
 		{
 			name:     "zero id",
 			input:    boiler.IdWithComment{Id: 0, Comment: "zero id"},
-			expected: `[0,"zero id"]`,
+			expected: `["0","zero id"]`,
 		},
 		{
 			name:     "large id",
 			input:    boiler.IdWithComment{Id: 18446744073709551615, Comment: "max uint64"},
-			expected: `[18446744073709551615,"max uint64"]`,
+			expected: `["18446744073709551615","max uint64"]`,
 		},
 		{
 			name:     "special characters in comment",
 			input:    boiler.IdWithComment{Id: 789, Comment: "comment with \"quotes\" and \n newlines"},
-			expected: `[789,"comment with \"quotes\" and \n newlines"]`,
+			expected: `["789","comment with \"quotes\" and \n newlines"]`,
 		},
 	}
 
@@ -58,70 +59,70 @@ func TestCommentedId_Unmarshal(t *testing.T) {
 	}{
 		{
 			name:     "full array format",
-			input:    `[123,"test comment"]`,
+			input:    `["123","test comment"]`,
 			expected: boiler.IdWithComment{Id: 123, Comment: "test comment"},
 			wantErr:  false,
 		},
 		{
 			name:     "array with just id",
-			input:    `[456]`,
+			input:    `["456"]`,
 			expected: boiler.IdWithComment{Id: 456, Comment: ""},
 			wantErr:  false,
 		},
 		{
-			name:     "direct uint64",
-			input:    `789`,
+			name:     "direct",
+			input:    `"789"`,
 			expected: boiler.IdWithComment{Id: 789, Comment: ""},
 			wantErr:  false,
 		},
 		{
 			name:     "zero id in array",
-			input:    `[0,"zero"]`,
+			input:    `["0","zero"]`,
 			expected: boiler.IdWithComment{Id: 0, Comment: "zero"},
 			wantErr:  false,
 		},
 		{
 			name:     "large id",
-			input:    `[18446744073709551615,"max uint64"]`,
+			input:    `["18446744073709551615","max uint64"]`,
 			expected: boiler.IdWithComment{Id: 18446744073709551615, Comment: "max uint64"},
 			wantErr:  false,
 		},
 		{
 			name:     "empty comment in array",
-			input:    `[123,""]`,
+			input:    `["123",""]`,
 			expected: boiler.IdWithComment{Id: 123, Comment: ""},
 			wantErr:  false,
 		},
 		{
 			name:     "special characters in comment",
-			input:    `[789,"comment with \"quotes\" and \n newlines"]`,
+			input:    `["789","comment with \"quotes\" and \n newlines"]`,
 			expected: boiler.IdWithComment{Id: 789, Comment: "comment with \"quotes\" and \n newlines"},
 			wantErr:  false,
 		},
-		{
-			name:     "negative number",
-			input:    `[-123,"comment"]`,
-			expected: boiler.IdWithComment{Id: 0, Comment: "comment"},
-		},
-		{
-			name:     "floating point number",
-			input:    `[123.5,"comment"]`,
-			expected: boiler.IdWithComment{Id: 123, Comment: "comment"},
-		},
 		// Error cases
+		{
+			name:    "negative number",
+			input:   `[-123,"comment"]`,
+			wantErr: true,
+		},
+		{
+			name:    "floating point number",
+			input:   `[123.5,"comment"]`,
+			wantErr: true,
+		},
 		{
 			name:    "empty array",
 			input:   `[]`,
 			wantErr: true,
 		},
 		{
-			name:    "string as first element",
-			input:   `["not a number","comment"]`,
+			name:    "number as first element",
+			input:   `[125,"comment"]`,
 			wantErr: true,
 		},
 		{
 			name:    "number as second element",
-			input:   `[123,456]`,
+			input:   `["123",456]`,
 			wantErr: true,
 		},
 		{
@@ -146,7 +147,7 @@ func TestCommentedId_Unmarshal(t *testing.T) {
 		},
 		{
 			name:    "malformed json",
-			input:   `[123,`,
+			input:   `["123",`,
 			wantErr: true,
 		},
 	}
@@ -202,17 +203,17 @@ func TestCommentedId_UnmarshalIntoExistingNoMerge(t *testing.T) {
 	}{
 		{
 			name:     "full array format",
-			input:    `[123,"new"]`,
+			input:    `["123","new"]`,
 			expected: boiler.IdWithComment{Id: 123, Comment: "new"},
 		},
 		{
 			name:     "array without string format",
-			input:    `[123]`,
+			input:    `["123"]`,
 			expected: boiler.IdWithComment{Id: 123, Comment: ""},
 		},
 		{
 			name:     "ID only format",
-			input:    `123`,
+			input:    `"123"`,
 			expected: boiler.IdWithComment{Id: 123, Comment: ""},
 		},
 	}
@@ -240,7 +241,7 @@ func BenchmarkCommentedId_Marshal(b *testing.B) {
 }
 
 func BenchmarkCommentedId_Unmarshal(b *testing.B) {
-	data := []byte(`[123456789,"benchmark comment"]`)
+	data := []byte(`["123456789","benchmark comment"]`)
 
 	for b.Loop() {
 		var c boiler.IdWithComment
@@ -252,7 +253,7 @@ func BenchmarkCommentedId_Unmarshal(b *testing.B) {
 }
 
 func BenchmarkCommentedId_UnmarshalDirect(b *testing.B) {
-	data := []byte(`123456789`)
+	data := []byte(`"123456789"`)
 
 	for b.Loop() {
 		var c boiler.IdWithComment
