@@ -311,7 +311,13 @@ func (b *Boiler) saveDatabase() error {
 		return err
 	}
 	defer dbFile.Close()
-	return json.MarshalWrite(dbFile, b.db)
+	err = json.MarshalWrite(dbFile, b.db)
+	if err != nil {
+		return err
+	}
+
+	_, err = dbFile.Write([]byte("\n"))
+	return err
 }
 
 func (b *Boiler) loadGamesConfig() error {
@@ -336,7 +342,12 @@ func (b *Boiler) saveGamesConfig() error {
 		return err
 	}
 	defer dbFile.Close()
-	return json.MarshalWrite(dbFile, b.gamesConfig, jsontext.WithIndent("\t"))
+	err = json.MarshalWrite(dbFile, b.gamesConfig, jsontext.WithIndent("\t"))
+	if err != nil {
+		return err
+	}
+	_, err = dbFile.Write([]byte("\n"))
+	return err
 }
 
 func FromConfig(config Config) (*Boiler, error) {
