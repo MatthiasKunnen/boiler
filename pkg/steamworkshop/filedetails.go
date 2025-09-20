@@ -40,7 +40,7 @@ type FileDetailApi struct {
 // the [GetPublishedFileDetails] API endpoint.
 // The response contains the details in the same order as the input.
 //
-// [GetPublishedFileDetails]: https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/
+// [GetPublishedFileDetails]: https://partner.steamgames.com/doc/webapi/ISteamRemoteStorage#GetPublishedFileDetails
 func FileDetailsApi(ctx context.Context, ids ...uint64) ([]FileDetailApi, error) {
 	data := url.Values{}
 	data.Set("itemcount", strconv.Itoa(len(ids)))
@@ -70,7 +70,7 @@ func FileDetailsApi(ctx context.Context, ids ...uint64) ([]FileDetailApi, error)
 // FileDetailsApiFromReader parses a response as received from the [GetPublishedFileDetails] API endpoint.
 // The response contains the details in the same order as the input.
 //
-// [GetPublishedFileDetails]: https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/
+// [GetPublishedFileDetails]: https://partner.steamgames.com/doc/webapi/ISteamRemoteStorage#GetPublishedFileDetails
 func FileDetailsApiFromReader(r io.Reader, ids ...uint64) ([]FileDetailApi, error) {
 	var response getPublishedFileDetailsResponse
 	err := json.UnmarshalRead(r, &response)

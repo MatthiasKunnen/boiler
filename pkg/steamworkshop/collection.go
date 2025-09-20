@@ -61,7 +61,7 @@ type CollectionDetailItem struct {
 // The response contains the details in the same order as the input.
 // The child items are sorted according to the sort order.
 //
-// [GetCollectionDetails]: https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/
+// [GetCollectionDetails]: https://partner.steamgames.com/doc/webapi/ISteamRemoteStorage#GetCollectionDetails
 func CollectionDetailsApi(ctx context.Context, collectionIds ...uint64) ([]CollectionDetailApi, error) {
 	data := url.Values{}
 	data.Set("collectioncount", strconv.Itoa(len(collectionIds)))
