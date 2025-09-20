@@ -1,6 +1,10 @@
 package boiler
 
-import "time"
+import (
+	"time"
+
+	"github.com/MatthiasKunnen/boiler/pkg/steamworkshop"
+)
 
 type Database struct {
 	Collections   map[uint64]Collection
@@ -8,12 +12,23 @@ type Database struct {
 }
 
 type WorkshopItem struct {
-	Requires    []int64 `json:",string"`
+	// Time when the workshop item was last downloaded.
+	LastDownloaded time.Time
+	// Time when the details of the workshop item were last retrieved.
+	LastRefreshed time.Time
+	Requires      []uint64 `json:",string"`
+	// Time when the workshop item was created.
 	TimeCreated time.Time
+	// Time when the workshop item was last updated.
 	TimeUpdated time.Time
 	Title       string
 }
 
 type Collection struct {
-	WorkshopItems []uint64 `json:",string"`
+	Items []CollectionItem
+}
+
+type CollectionItem struct {
+	Id   uint64 `json:",string"`
+	Type steamworkshop.CollectionDetailFileType
 }

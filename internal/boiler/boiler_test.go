@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/MatthiasKunnen/boiler/internal/boiler"
+	"github.com/MatthiasKunnen/boiler/pkg/steamworkshop"
 	"github.com/go-json-experiment/json"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,15 +27,15 @@ func TestDatabaseJsonRoundtrip(t *testing.T) {
 	input := boiler.Database{
 		Collections: map[uint64]boiler.Collection{
 			961618554: {
-				WorkshopItems: []uint64{
-					158164864,
-					50,
+				Items: []boiler.CollectionItem{
+					{158164864, steamworkshop.CollectionDetailFileTypeWorkshopItem},
+					{50, steamworkshop.CollectionDetailFileTypeWorkshopItem},
 				},
 			},
 		},
 		WorkshopItems: map[uint64]boiler.WorkshopItem{
 			463939057: {
-				Requires:    []int64{120, 2},
+				Requires:    []uint64{120, 2},
 				TimeCreated: time.Unix(1758384867, 0),
 				TimeUpdated: time.Unix(1758384867, 0),
 				Title:       "Hello",

@@ -1,10 +1,16 @@
 package boiler
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
+	"time"
 
+	"github.com/MatthiasKunnen/boiler/pkg/steamcmd"
+	"github.com/MatthiasKunnen/boiler/pkg/steamworkshop"
 	"github.com/go-json-experiment/json"
 	"github.com/go-json-experiment/json/jsontext"
 )
@@ -37,9 +43,250 @@ func (b *Boiler) Save() error {
 	return nil
 }
 
+type DownloadOpts struct {
+	DownloadUpToDate bool
+	LoginUsername    string
+	Logout           bool
+}
+
+func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
+	downOpts := steamcmd.Opts{
+		LoginUsername:         b.config.LoginUsername,
+		InstallDir:            b.config.GamesDir,
+		DownloadGames:         make([]steamcmd.DownloadGameOpts, 0, len(b.gamesConfig)),
+		DownloadWorkshopItems: nil,
+		Logout:                opts.Logout,
+		SteamCmdPath:          b.config.SteamCmdPath,
+	}
+	if opts.LoginUsername != "" {
+		downOpts.LoginUsername = opts.LoginUsername
+	}
+
+	for _, gameConfig := range b.gamesConfig {
+		downOpts.DownloadGames = append(downOpts.DownloadGames, steamcmd.DownloadGameOpts{
+			Id:         gameConfig.Id,
+			BetaBranch: gameConfig.BetaBranch,
+			Validate:   false,
+		})
+		ids, err := gameConfig.GetWorkshopItemsOrdered(b.db)
+		if err != nil {
+			return err
+		}
+		for _, id := range ids {
+			item := b.db.WorkshopItems[id]
+			if !opts.DownloadUpToDate && item.LastDownloaded.After(item.TimeUpdated) {
+				continue
+			}
+			downOpts.DownloadWorkshopItems = append(
+				downOpts.DownloadWorkshopItems,
+				steamcmd.DownloadWorkshopItemOpts{
+					GameId:         gameConfig.WorkshopAppId,
+					WorkshopItemId: id,
+				},
+			)
+		}
+	}
+
+	err := steamcmd.Exec(ctx, downOpts)
+	if err != nil {
+		return err
+	}
+
+	for _, downItem := range downOpts.DownloadWorkshopItems {
+		item := b.db.WorkshopItems[downItem.WorkshopItemId]
+		item.LastDownloaded = time.Now()
+		b.db.WorkshopItems[downItem.WorkshopItemId] = item
+	}
+
+	return b.Save()
+}
+
+type UpdateOpts struct {
+	Download      bool
+	LoginUsername string
+}
+
+// UpdateDatabase updates the database based on the games configuration.
+// All workshop items and collections will be fetched and updated.
+func (b *Boiler) UpdateDatabase(ctx context.Context, opts UpdateOpts) error {
+	nextWorkshopItems := make(map[uint64]struct{})
+	nextCollections := make(map[uint64]struct{})
+	collectionsSeen := make(map[uint64]struct{})
+	for _, game := range b.gamesConfig {
+		for _, collection := range game.WorkshopCollections {
+			nextCollections[collection.Id] = struct{}{}
+		}
+	}
+
+	for {
+		if len(nextCollections) == 0 {
+			break
+		}
+		collections := nextCollections
+		nextCollections = make(map[uint64]struct{})
+		for _, keys := range batchMapKeys(collections, 100) {
+			log.Printf("Getting info of %d collections", len(keys))
+			result, err := steamworkshop.CollectionDetailsApi(ctx, keys...)
+			if err != nil {
+				return err
+			}
+			for _, collectionDetails := range result {
+				c := Collection{
+					Items: make([]CollectionItem, 0, len(collectionDetails.Items)),
+				}
+				for _, item := range collectionDetails.Items {
+					c.Items = append(c.Items, CollectionItem{
+						Id:   item.Id,
+						Type: item.Type,
+					})
+
+					switch item.Type {
+					case steamworkshop.CollectionDetailFileTypeWorkshopItem:
+						nextWorkshopItems[item.Id] = struct{}{}
+					case steamworkshop.CollectionDetailFileTypeUnknown:
+						log.Printf(
+							"Unknown collection type: %d for workshop item %d. Contact the developer.",
+							item.Type,
+							item.Id,
+						)
+					case steamworkshop.CollectionDetailFileTypeCollection:
+						if _, ok := collectionsSeen[item.Id]; !ok {
+							collectionsSeen[item.Id] = struct{}{}
+							nextCollections[item.Id] = struct{}{}
+						}
+					}
+				}
+				b.db.Collections[collectionDetails.CollectionId] = c
+			}
+		}
+	}
+
+	for _, config := range b.gamesConfig {
+		for _, items := range config.WorkshopDependencyAdd {
+			for _, item := range items {
+				nextWorkshopItems[item.Id] = struct{}{}
+			}
+		}
+		for _, items := range config.WorkshopDependencyRemove {
+			for _, item := range items {
+				nextWorkshopItems[item.Id] = struct{}{}
+			}
+		}
+		for _, item := range config.WorkshopItems {
+			nextWorkshopItems[item.Id] = struct{}{}
+		}
+	}
+
+	for id := range nextWorkshopItems {
+		item, ok := b.db.WorkshopItems[id]
+		if !ok {
+			continue
+		}
+		for _, id := range item.Requires {
+			nextWorkshopItems[id] = struct{}{}
+		}
+		for _, id := range b.getRequiredWorkshopIds(item.Requires) {
+			nextWorkshopItems[id] = struct{}{}
+		}
+	}
+
+	workshopItemsSeen := make(map[uint64]struct{})
+	for {
+		if len(nextWorkshopItems) == 0 {
+			break
+		}
+		workshopItems := nextWorkshopItems
+		nextWorkshopItems = make(map[uint64]struct{})
+		updateRequirements := make(map[uint64]struct{})
+
+		for _, ids := range batchMapKeys(workshopItems, 100) {
+			log.Printf("Getting info of %d workshop items", len(ids))
+			fileDetails, err := steamworkshop.FileDetailsApi(ctx, ids...)
+			if err != nil {
+				return err
+			}
+
+			for _, detail := range fileDetails {
+				existing, alreadyExists := b.db.WorkshopItems[detail.Id]
+				newItem := WorkshopItem{
+					LastDownloaded: time.Time{},
+					LastRefreshed:  time.Now(),
+					Requires:       nil,
+					TimeCreated:    detail.TimeCreated,
+					TimeUpdated:    detail.TimeUpdated,
+					Title:          detail.Title,
+				}
+				if alreadyExists {
+					newItem.LastDownloaded = existing.LastDownloaded
+					newItem.Requires = existing.Requires
+				}
+				if !alreadyExists || existing.TimeUpdated.Before(detail.TimeUpdated) {
+					updateRequirements[detail.Id] = struct{}{}
+				}
+
+				b.db.WorkshopItems[detail.Id] = newItem
+				workshopItemsSeen[detail.Id] = struct{}{}
+			}
+		}
+
+		for workshopId := range updateRequirements {
+			log.Printf("Getting dependencies of workshop item %d", workshopId)
+			fileDetails, err := steamworkshop.GetFileDetailsWeb(ctx, workshopId)
+			if err != nil {
+				return err
+			}
+
+			item, ok := b.db.WorkshopItems[workshopId]
+			if !ok {
+				return fmt.Errorf(
+					"workshop item %d not in database on requirement update",
+					workshopId,
+				)
+			}
+
+			item.Requires = item.Requires[:0]
+			for _, requiredItem := range fileDetails.RequiredItems {
+				item.Requires = append(item.Requires, requiredItem.Id)
+				if _, ok := workshopItemsSeen[requiredItem.Id]; !ok {
+					nextWorkshopItems[requiredItem.Id] = struct{}{}
+				}
+			}
+
+			b.db.WorkshopItems[workshopId] = item
+		}
+	}
+
+	err := b.Save()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *Boiler) getRequiredWorkshopIds(workshopIds []uint64) []uint64 {
+	var result []uint64
+	for _, id := range workshopIds {
+		item, ok := b.db.WorkshopItems[id]
+		if !ok {
+			continue
+		}
+		result = append(result, item.Requires...)
+		result = append(result, b.getRequiredWorkshopIds(item.Requires)...)
+	}
+	return result
+}
+
 func (b *Boiler) loadDatabase() error {
 	dbFile, err := os.Open(b.config.DatabasePath)
-	if err != nil {
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		b.db = &Database{
+			Collections:   map[uint64]Collection{},
+			WorkshopItems: map[uint64]WorkshopItem{},
+		}
+		return nil
+	case err != nil:
 		return err
 	}
 	defer dbFile.Close()
@@ -49,6 +296,12 @@ func (b *Boiler) loadDatabase() error {
 		return err
 	}
 	b.db = &db
+	if b.db.Collections == nil {
+		b.db.Collections = map[uint64]Collection{}
+	}
+	if b.db.WorkshopItems == nil {
+		b.db.WorkshopItems = map[uint64]WorkshopItem{}
+	}
 	return nil
 }
 

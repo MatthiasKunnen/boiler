@@ -1,9 +1,13 @@
 package boiler
 
 import (
-	"github.com/spf13/cobra"
 	"log"
+
+	"github.com/MatthiasKunnen/boiler/internal/boiler"
+	"github.com/spf13/cobra"
 )
+
+var configFilePath string
 
 var rootCmd = &cobra.Command{
 	Use:               "boiler",
@@ -26,4 +30,11 @@ func GetCommand() *cobra.Command {
 }
 
 func init() {
+	rootCmd.PersistentFlags().StringVar(
+		&configFilePath,
+		"config",
+		boiler.ConfigFilePath,
+		"Path to the config file.",
+	)
+	rootCmd.AddCommand(updateCmd)
 }
