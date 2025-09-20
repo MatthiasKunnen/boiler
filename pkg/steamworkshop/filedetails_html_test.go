@@ -46,3 +46,12 @@ func TestExtractFileDetailsFromHtml(t *testing.T) {
 	}
 	assert.Equal(t, expected, actual)
 }
+
+func BenchmarkExtractFileDetailsFromHtml(b *testing.B) {
+	for b.Loop() {
+		_, err := steamworkshop.ExtractFileDetailsFromHtml(bytes.NewReader(workshopDetail))
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
