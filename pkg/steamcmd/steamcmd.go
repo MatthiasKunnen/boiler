@@ -93,7 +93,7 @@ func Exec(ctx context.Context, opts Opts) error {
 	}
 	for _, item := range opts.DownloadWorkshopItems {
 		_, err = io.WriteString(temp, fmt.Sprintf(
-			"download_item %d %d\n",
+			"workshop_download_item %d %d\n",
 			item.GameId,
 			item.WorkshopItemId,
 		))
