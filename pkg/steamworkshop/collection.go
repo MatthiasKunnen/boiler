@@ -2,13 +2,15 @@ package steamworkshop
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/go-json-experiment/json"
 )
 
 type CollectionDetailFileType int
@@ -22,7 +24,7 @@ const (
 )
 
 type collectionDetailsResponse struct {
-	Response collectionDetailsResponseResponse
+	Response collectionDetailsResponseResponse `json:"response"`
 }
 
 type collectionDetailsResponseResponse struct {
@@ -32,38 +34,39 @@ type collectionDetailsResponseResponse struct {
 }
 
 type cdrcd struct {
-	PublishedFileId string                  `json:"publishedfileid"`
+	PublishedFileId uint64                  `json:"publishedfileid,string"`
 	Result          int                     `json:"result"`
 	Children        []collectionDetailChild `json:"children"`
 }
 
 type collectionDetailChild struct {
-	PublishedFileId string                   `json:"publishedfileid"`
+	PublishedFileId uint64                   `json:"publishedfileid,string"`
 	SortOrder       int                      `json:"sortorder"`
 	FileType        CollectionDetailFileType `json:"filetype"`
 }
 
 type CollectionDetailApi struct {
-	CollectionId string
+	CollectionId uint64
 	Items        []CollectionDetailItem
 }
 
 type CollectionDetailItem struct {
-	Id        string
+	Id        uint64
 	SortOrder int
 	Type      CollectionDetailFileType
 }
 
-// CollectionDetailsApi returns the details of the collection according to the [GetCollectionDetails] API endpoint.
+// CollectionDetailsApi returns the details of the collection according to the
+// [GetCollectionDetails] API endpoint.
 // The response contains the details in the same order as the input.
 // The child items are sorted according to the sort order.
 //
 // [GetCollectionDetails]: https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/
-func CollectionDetailsApi(ctx context.Context, collectionIds ...string) ([]CollectionDetailApi, error) {
+func CollectionDetailsApi(ctx context.Context, collectionIds ...uint64) ([]CollectionDetailApi, error) {
 	data := url.Values{}
 	data.Set("collectioncount", strconv.Itoa(len(collectionIds)))
 	for i, id := range collectionIds {
-		data.Set(fmt.Sprintf("publishedfileids[%d]", i), id)
+		data.Set(fmt.Sprintf("publishedfileids[%d]", i), strconv.FormatUint(id, 10))
 	}
 
 	client := &http.Client{}
@@ -80,8 +83,17 @@ func CollectionDetailsApi(ctx context.Context, collectionIds ...string) ([]Colle
 	if err != nil {
 		return nil, err
 	}
+
+	defer resp.Body.Close()
+	return CollectionDetailsApiFromReader(resp.Body, collectionIds...)
+}
+
+func CollectionDetailsApiFromReader(
+	r io.Reader,
+	collectionIds ...uint64,
+) ([]CollectionDetailApi, error) {
 	var response collectionDetailsResponse
-	err = json.NewDecoder(resp.Body).Decode(&response)
+	err := json.UnmarshalRead(r, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +118,7 @@ func CollectionDetailsApi(ctx context.Context, collectionIds ...string) ([]Colle
 		})
 		index := slices.Index(collectionIds, detail.PublishedFileId)
 		if index < 0 {
-			return nil, fmt.Errorf("unexpected collection returned %s", detail.PublishedFileId)
+			return nil, fmt.Errorf("unexpected collection returned %d", detail.PublishedFileId)
 		}
 		result[index] = item
 	}

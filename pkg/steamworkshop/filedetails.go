@@ -2,14 +2,16 @@ package steamworkshop
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-json-experiment/json"
 )
 
 type getPublishedFileDetailsResponse struct {
@@ -22,13 +24,13 @@ type getPublishedFileDetailsResponseInner struct {
 }
 
 type fileDetailApi struct {
-	Id          string `json:"publishedfileid"`
+	Id          uint64 `json:"publishedfileid,string"`
 	TimeCreated int64  `json:"time_created"`
 	TimeUpdated int64  `json:"time_updated"`
 	Title       string `json:"title"`
 }
 type FileDetailApi struct {
-	Id          string
+	Id          uint64
 	TimeCreated time.Time
 	TimeUpdated time.Time
 	Title       string
@@ -39,11 +41,11 @@ type FileDetailApi struct {
 // The response contains the details in the same order as the input.
 //
 // [GetPublishedFileDetails]: https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/
-func FileDetailsApi(ctx context.Context, ids ...string) ([]FileDetailApi, error) {
+func FileDetailsApi(ctx context.Context, ids ...uint64) ([]FileDetailApi, error) {
 	data := url.Values{}
 	data.Set("itemcount", strconv.Itoa(len(ids)))
 	for i, id := range ids {
-		data.Set(fmt.Sprintf("publishedfileids[%d]", i), id)
+		data.Set(fmt.Sprintf("publishedfileids[%d]", i), strconv.FormatUint(id, 10))
 	}
 
 	client := &http.Client{}
@@ -60,8 +62,18 @@ func FileDetailsApi(ctx context.Context, ids ...string) ([]FileDetailApi, error)
 	if err != nil {
 		return nil, err
 	}
+
+	defer resp.Body.Close()
+	return FileDetailsApiFromReader(resp.Body, ids...)
+}
+
+// FileDetailsApiFromReader parses a response as received from the [GetPublishedFileDetails] API endpoint.
+// The response contains the details in the same order as the input.
+//
+// [GetPublishedFileDetails]: https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/
+func FileDetailsApiFromReader(r io.Reader, ids ...uint64) ([]FileDetailApi, error) {
 	var response getPublishedFileDetailsResponse
-	err = json.NewDecoder(resp.Body).Decode(&response)
+	err := json.UnmarshalRead(r, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +89,7 @@ func FileDetailsApi(ctx context.Context, ids ...string) ([]FileDetailApi, error)
 	for _, detail := range response.Response.PublishedFileDetails {
 		index := slices.Index(ids, detail.Id)
 		if index < 0 {
-			return nil, fmt.Errorf("unexpected file detail returned %s", detail.Id)
+			return nil, fmt.Errorf("unexpected file detail returned %d", detail.Id)
 		}
 		result[index] = FileDetailApi{
 			Id:          detail.Id,

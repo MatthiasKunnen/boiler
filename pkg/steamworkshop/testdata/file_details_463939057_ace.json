@@ -1,0 +1,44 @@
+{
+	"response": {
+		"result": 1,
+		"resultcount": 1,
+		"publishedfiledetails": [
+			{
+				"publishedfileid": "463939057",
+				"result": 1,
+				"creator": "76561198194647182",
+				"creator_app_id": 107410,
+				"consumer_app_id": 107410,
+				"filename": "",
+				"file_size": "227199182",
+				"file_url": "",
+				"hcontent_file": "3524971499552554428",
+				"preview_url": "https://images.steamusercontent.com/ugc/964230428541162652/F7DC4A5DD2A4896E2D572D7E9E085489426FC64B/",
+				"hcontent_preview": "964230428541162652",
+				"title": "ace",
+				"description": "[h1]Advanced Combat Environment 3 (ACE3)[/h1]\r\nhttps://ace3.acemod.org\r\n\r\nACE3 is the collaborative efforts of the former [b]AGM[/b] and [b]CSE[/b] teams, along with many of the developers from Arma 2's [b]ACE2[/b] project.\r\n \r\nThis mod is entirely [b]open-source[/b] (we are hosted on [url=https://github.com/acemod/ACE3]GitHub[/url]), and everyone is free to propose changes or maintain their own, customized version as long as they make their changes open to the public in accordance with the GNU General Public License.\r\n \r\nACE3 is [b]built modularly[/b], thus a team can maintain its own tailored version, excluding a select number of components that they don't like, or which conflict with other addons. Larger components themselves, like the medical system and other core features also include various customization options, allowing mission designers and communities to tweak the overall experience.\r\n\r\nSigned,\r\nThe ACE Team\r\n\r\n\r\n[h1]Core Features[/h1]\r\n[list]\r\n[*]Completely new 3D Interaction/Action System\r\n[*]Performance and reliability framework\r\n[*]Focus on modularity and customization\r\n[*]New flexible client and server settings & configuration\r\n[*]Improved medical system with various levels (Basic/Advanced) focus on gameplay/realism\r\n[*]Proper & consistent network synced weather\r\n[*]Wind and Weather Advanced Ballistics\r\n[*]Captivity System\r\n[*]Explosives System including different trigger types\r\n[*]Map screen improvements, marker placement and map tools\r\n[*]Advanced missile guidance and laser designation[/list]\r\n \r\n[h1]Additional Features[/h1]\r\n[list]\r\n[*]Carrying and dragging\r\n[*]Realistic names for vehicles and weapons\r\n[*]Realistic ballistics/FCS calculated in C/C++ extensions\r\n[*]Backblast and overpressure simulation\r\n[*]A fire control system for armored vehicles and helicopters\r\n[*]Disposable launchers\r\n[*]Realistic G-forces\r\n[*]Vehicle Locking\r\n[*]Name tags\r\n[*]Laserpointers\r\n[*]Realistic Night and Thermal vision modes\r\n[*]Magazine repacking\r\n[*]Realistic weapon heating\r\n[*]Combat deafness simulation\r\n[*]Improved Ragdoll Physics\r\n[*]Improved interactions for AARs and ammo bearers\r\n[*]Adjustable sniper scopes\r\n[*]No Idle Animation with lowered weapon\r\n[*]No talking player Avatar\r\n[*]Jumping over obstacles, climbing over walls and cutting down fences\r\n[*]Vector, MicroDAGR, Kestrel and ATrag devices[/list]\r\n[i]... and much more[/i]\r\n\r\n[h1]Documentation[/h1]\r\nDocumentation for our features, modules, usage and for developers is available on our [url=https://ace3.acemod.org/wiki/]wiki at ace3.acemod.org[/url]. If you are interested in helping out with writing documentation the source is available on our [url=https://github.com/acemod/ACE3]repository[/url].\r\n\r\nAll optional packages are also uploaded to Steam Workshop separately for ease of use. They can be found on the following pages:\r\n[list]\r\n[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2202412030]No Action Menu[/url]\r\n[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2202412481]No Crosshair[/url]\r\n[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2202413047]No Uniform Restrictions[/url]\r\n[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2202413537]Particles[/url]\r\n[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2202414018]Realistic Dispersion[/url]\r\n[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2202414450]Tracers[/url] (ball)\r\n[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3053169823]No Medical[/url] (not recommended)\r\n[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3053177117]No Realistic Names[/url]\r\n[/list]",
+				"time_created": 1434653369,
+				"time_updated": 1752589679,
+				"visibility": 0,
+				"banned": 0,
+				"ban_reason": "",
+				"subscriptions": 1369603,
+				"favorited": 41893,
+				"lifetime_subscriptions": 2189574,
+				"lifetime_favorited": 46174,
+				"views": 1131743,
+				"tags": [
+					{
+						"tag": "Mod"
+					},
+					{
+						"tag": "Content Review"
+					},
+					{
+						"tag": "x64"
+					}
+				]
+			}
+		]
+	}
+}

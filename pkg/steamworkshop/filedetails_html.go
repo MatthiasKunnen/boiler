@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"golang.org/x/net/html"
 	"io"
 	"net/http"
 	"net/url"
 	"slices"
+	"strconv"
+
+	"golang.org/x/net/html"
 )
 
 type FileDetailsWeb struct {
@@ -17,17 +19,17 @@ type FileDetailsWeb struct {
 }
 
 type FileDetailsRequiredItems struct {
-	Id    string
+	Id    uint64
 	Title string
 }
 
 // GetFileDetailsWeb fetches the HTML of the mod and extracts data from it.
-func GetFileDetailsWeb(ctx context.Context, id string) (FileDetailsWeb, error) {
+func GetFileDetailsWeb(ctx context.Context, id uint64) (FileDetailsWeb, error) {
 	client := &http.Client{}
 	r, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		"https://steamcommunity.com/sharedfiles/filedetails/?id="+id,
+		fmt.Sprintf("https://steamcommunity.com/sharedfiles/filedetails/?id=%d", id),
 		nil,
 	)
 	if err != nil {
@@ -125,15 +127,17 @@ func ExtractFileDetailsFromHtml(r io.Reader) (FileDetailsWeb, error) {
 						continue
 					}
 					id := parsedUrl.Query().Get("id")
-					if id != "" {
-						nextRequiredItem.Id = id
-						state = inRequiredItem
-						inRequiredItemTracker.Reset(slices.Clone(tagName), func() {
-							state = inRequiredItems
-							result.RequiredItems = append(result.RequiredItems, nextRequiredItem)
-							nextRequiredItem = FileDetailsRequiredItems{}
-						})
+					parseUint, err := strconv.ParseUint(id, 10, 64)
+					if err != nil {
+						break
 					}
+					nextRequiredItem.Id = parseUint
+					state = inRequiredItem
+					inRequiredItemTracker.Reset(slices.Clone(tagName), func() {
+						state = inRequiredItems
+						result.RequiredItems = append(result.RequiredItems, nextRequiredItem)
+						nextRequiredItem = FileDetailsRequiredItems{}
+					})
 					break
 				}
 
