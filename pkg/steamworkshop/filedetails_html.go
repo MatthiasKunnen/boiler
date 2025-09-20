@@ -68,6 +68,7 @@ func ExtractFileDetailsFromHtml(r io.Reader) (FileDetailsWeb, error) {
 		nextIsTitle
 		inRequiredItems
 		inRequiredItem
+		stop
 	)
 	result := FileDetailsWeb{}
 	// This requires proper HTML (every tag should be closed)
@@ -80,6 +81,10 @@ func ExtractFileDetailsFromHtml(r io.Reader) (FileDetailsWeb, error) {
 	}
 
 	for {
+		if state == stop {
+			return result, nil
+		}
+
 		tokenType := z.Next()
 		switch tokenType {
 		case html.ErrorToken:
@@ -115,7 +120,7 @@ func ExtractFileDetailsFromHtml(r io.Reader) (FileDetailsWeb, error) {
 				} else if bytes.Equal(key, idAttr) && bytes.Equal(val, requiredItemsId) {
 					state = inRequiredItems
 					inRequiredItemsTracker.Reset(slices.Clone(tagName), func() {
-						state = nothing
+						state = stop
 					})
 					break
 				} else if state == inRequiredItems &&
