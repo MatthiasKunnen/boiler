@@ -38,4 +38,5 @@ func init() {
 	)
 	rootCmd.AddCommand(logoutCmd)
 	rootCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(workshopItemsCmd)
 }

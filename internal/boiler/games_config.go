@@ -61,7 +61,10 @@ func (gc GameConfig) GetWorkshopItemsOrdered(db *Database) ([]WorkshopItemWithId
 	for _, item := range gc.WorkshopItems {
 		ids = append(ids, item.Id)
 	}
+	return gc.WorkshopItemsInOrder(db, ids...)
+}
 
+func (gc GameConfig) WorkshopItemsInOrder(db *Database, ids ...uint64) ([]WorkshopItemWithId, error) {
 	var results []WorkshopItemWithId
 	idsSeen := make(map[uint64]struct{})
 	results, err := gc.getWorkshopItemsOrdered(db, results, idsSeen, ids...)

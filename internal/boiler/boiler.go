@@ -261,6 +261,65 @@ func (b *Boiler) UpdateDatabase(ctx context.Context, opts UpdateOpts) error {
 	return nil
 }
 
+func (b *Boiler) GetWorkshopItemsForGame(gameName string) ([]WorkshopItemWithId, error) {
+	for _, config := range b.gamesConfig {
+		if config.Name != gameName {
+			continue
+		}
+		ordered, err := config.GetWorkshopItemsOrdered(b.db)
+		if err != nil {
+			return nil, err
+		}
+		return ordered, nil
+	}
+
+	return nil, nil
+}
+
+func (b *Boiler) GetWorkshopItemsDependencyOrder(
+	gameName string,
+	names ...string,
+) ([]WorkshopItemWithId, error) {
+	var gameConfig GameConfig
+	for _, config := range b.gamesConfig {
+		if gameName == config.Name {
+			gameConfig = config
+		}
+	}
+	if gameConfig.Name == "" {
+		return nil, nil
+	}
+
+	ids := make([]uint64, 0, len(names))
+	for _, name := range names {
+		var foundItem WorkshopItemWithId
+		for id, item := range b.db.WorkshopItems {
+			if item.Title == name {
+				foundItem = WorkshopItemWithId{
+					Id:           id,
+					WorkshopItem: item,
+				}
+				break
+			}
+		}
+
+		if foundItem.Id == 0 {
+			return nil, fmt.Errorf("could not find workshop item %s", name)
+		}
+		ids = append(ids, foundItem.Id)
+	}
+
+	return gameConfig.WorkshopItemsInOrder(b.db, ids...)
+}
+
+func (b *Boiler) GetGames() []string {
+	result := make([]string, 0, len(b.gamesConfig))
+	for _, config := range b.gamesConfig {
+		result = append(result, config.Name)
+	}
+	return result
+}
+
 func (b *Boiler) Logout(ctx context.Context) error {
 	return steamcmd.LogOutUser(ctx, b.config.SteamCmdPath, b.config.LoginUsername)
 }
