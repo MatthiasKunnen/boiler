@@ -261,6 +261,10 @@ func (b *Boiler) UpdateDatabase(ctx context.Context, opts UpdateOpts) error {
 	return nil
 }
 
+func (b *Boiler) Logout(ctx context.Context) error {
+	return steamcmd.LogOutUser(ctx, b.config.SteamCmdPath, b.config.LoginUsername)
+}
+
 func (b *Boiler) getRequiredWorkshopIds(workshopIds []uint64) []uint64 {
 	var result []uint64
 	for _, id := range workshopIds {

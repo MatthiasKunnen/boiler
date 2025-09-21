@@ -36,5 +36,6 @@ func init() {
 		boiler.ConfigFilePath,
 		"Path to the config file.",
 	)
+	rootCmd.AddCommand(logoutCmd)
 	rootCmd.AddCommand(updateCmd)
 }
