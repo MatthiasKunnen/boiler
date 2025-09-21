@@ -33,6 +33,9 @@ func TestDatabaseJsonRoundtrip(t *testing.T) {
 				},
 			},
 		},
+		PathChanges: []string{
+			"10700/463939057/There/Be/Uppercase.txt",
+		},
 		WorkshopItems: map[uint64]boiler.WorkshopItem{
 			463939057: {
 				CreatorAppId: 10700,

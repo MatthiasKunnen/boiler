@@ -7,8 +7,13 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
+	"slices"
+	"strings"
 	"time"
 
+	"github.com/MatthiasKunnen/boiler/pkg/filecasing"
 	"github.com/MatthiasKunnen/boiler/pkg/steamcmd"
 	"github.com/MatthiasKunnen/boiler/pkg/steamworkshop"
 	"github.com/go-json-experiment/json"
@@ -43,6 +48,57 @@ func (b *Boiler) Save() error {
 	return nil
 }
 
+func (b *Boiler) changeWSItemCasing(toLower bool, items []WorkshopItemWithId) error {
+	// @todo handle errors during the case changes
+	if len(items) == 0 {
+		return nil
+	}
+
+	basePath := path.Join(b.config.GamesDir, SteamWorkshopDownloadDir)
+	if toLower {
+		var changedPaths []string
+		for _, item := range items {
+			suffix := item.PathContentSuffix()
+			p := path.Join(basePath, suffix)
+			err := filecasing.MakeLowerCase(p, func(original string) {
+				changedPaths = append(changedPaths, filepath.Join(suffix, original))
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		slices.DeleteFunc(b.db.PathChanges, func(p string) bool {
+			for _, item := range items {
+				if strings.HasPrefix(p, item.PathContentSuffix()) {
+					return true
+				}
+			}
+			return false
+		})
+		b.db.PathChanges = append(b.db.PathChanges, changedPaths...)
+	} else {
+		for _, p := range b.db.PathChanges {
+			skip := true
+			for _, item := range items {
+				if strings.HasPrefix(p, item.PathContentSuffix()) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				continue
+			}
+			err := filecasing.RestoreCase(basePath, p)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 type DownloadOpts struct {
 	DownloadUpToDate bool
 	Logout           bool
@@ -58,6 +114,8 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 		SteamCmdPath:          b.config.SteamCmdPath,
 	}
 
+	var filenameCasingUpdates []WorkshopItemWithId
+
 	for _, gameConfig := range b.gamesConfig {
 		downOpts.DownloadGames = append(downOpts.DownloadGames, steamcmd.DownloadGameOpts{
 			Id:         gameConfig.Id,
@@ -72,6 +130,11 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 			if !opts.DownloadUpToDate && item.LastDownloaded.After(item.TimeUpdated) {
 				continue
 			}
+
+			if gameConfig.MakeWorkshopItemsLowercase {
+				filenameCasingUpdates = append(filenameCasingUpdates, item)
+			}
+
 			downOpts.DownloadWorkshopItems = append(
 				downOpts.DownloadWorkshopItems,
 				steamcmd.DownloadWorkshopItemOpts{
@@ -85,9 +148,14 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 	log.Printf("%d games will be updated", len(downOpts.DownloadGames))
 	log.Printf("%d workshop items will be updated", len(downOpts.DownloadWorkshopItems))
 
-	err := steamcmd.Exec(ctx, downOpts)
+	err := b.changeWSItemCasing(false, filenameCasingUpdates)
 	if err != nil {
-		return err
+		return fmt.Errorf("error restoring workshop items file casing: %w", err)
+	}
+	err = steamcmd.Exec(ctx, downOpts)
+	if err != nil {
+		caseErr := b.changeWSItemCasing(true, filenameCasingUpdates)
+		return errors.Join(err, caseErr)
 	}
 
 	for _, downItem := range downOpts.DownloadWorkshopItems {
@@ -96,7 +164,11 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 		b.db.WorkshopItems[downItem.WorkshopItemId] = item
 	}
 
-	return b.Save()
+	err = b.changeWSItemCasing(true, filenameCasingUpdates)
+	if err != nil {
+		err = fmt.Errorf("error changing workshop items file casing to lower: %w", err)
+	}
+	return errors.Join(b.Save(), err)
 }
 
 type UpdateOpts struct {
