@@ -31,7 +31,7 @@ are in games.json or are dependencies will be downloaded.
 			log.Fatalf("failed to open config file: %v", err)
 		}
 		defer configFile.Close()
-		b, err := boiler.FromConfigReader(configFile)
+		b, err := boiler.FromConfigReader(configFile, boiler.WithLoginUsername(loginUsername))
 		if err != nil {
 			log.Fatalf("failed to read config: %v", err)
 		}
@@ -54,7 +54,6 @@ are in games.json or are dependencies will be downloaded.
 		if !skipDownload {
 			err = b.Download(ctx, boiler.DownloadOpts{
 				DownloadUpToDate: downloadUpToDate,
-				LoginUsername:    loginUsername,
 				Logout:           logout,
 			})
 			if err != nil {

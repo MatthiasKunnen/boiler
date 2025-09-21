@@ -45,7 +45,6 @@ func (b *Boiler) Save() error {
 
 type DownloadOpts struct {
 	DownloadUpToDate bool
-	LoginUsername    string
 	Logout           bool
 }
 
@@ -57,9 +56,6 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 		DownloadWorkshopItems: nil,
 		Logout:                opts.Logout,
 		SteamCmdPath:          b.config.SteamCmdPath,
-	}
-	if opts.LoginUsername != "" {
-		downOpts.LoginUsername = opts.LoginUsername
 	}
 
 	for _, gameConfig := range b.gamesConfig {
@@ -373,11 +369,25 @@ func FromConfig(config Config) (*Boiler, error) {
 	return b, nil
 }
 
-func FromConfigReader(r io.Reader) (*Boiler, error) {
+type ConfigOpt func(config *Config)
+
+func WithLoginUsername(username string) ConfigOpt {
+	return func(config *Config) {
+		if username != "" {
+			config.LoginUsername = username
+		}
+	}
+}
+
+func FromConfigReader(r io.Reader, opts ...ConfigOpt) (*Boiler, error) {
 	var config Config
 	err := json.UnmarshalRead(r, &config)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, optFunc := range opts {
+		optFunc(&config)
 	}
 
 	return FromConfig(config)
