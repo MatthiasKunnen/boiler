@@ -209,6 +209,7 @@ func (b *Boiler) UpdateDatabase(ctx context.Context, opts UpdateOpts) error {
 			for _, detail := range fileDetails {
 				existing, alreadyExists := b.db.WorkshopItems[detail.Id]
 				newItem := WorkshopItem{
+					CreatorAppId:   detail.CreatorAppId,
 					LastDownloaded: time.Time{},
 					LastRefreshed:  time.Now(),
 					Requires:       nil,

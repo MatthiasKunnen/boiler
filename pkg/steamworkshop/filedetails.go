@@ -24,16 +24,19 @@ type getPublishedFileDetailsResponseInner struct {
 }
 
 type fileDetailApi struct {
-	Id          uint64 `json:"publishedfileid,string"`
-	TimeCreated int64  `json:"time_created"`
-	TimeUpdated int64  `json:"time_updated"`
-	Title       string `json:"title"`
+	CreatorAppId int    `json:"creator_app_id"`
+	Id           uint64 `json:"publishedfileid,string"`
+	TimeCreated  int64  `json:"time_created"`
+	TimeUpdated  int64  `json:"time_updated"`
+	Title        string `json:"title"`
 }
 type FileDetailApi struct {
-	Id          uint64
-	TimeCreated time.Time
-	TimeUpdated time.Time
-	Title       string
+	// The ID of the game that the workshop item relates to.
+	CreatorAppId int
+	Id           uint64
+	TimeCreated  time.Time
+	TimeUpdated  time.Time
+	Title        string
 }
 
 // FileDetailsApi returns the details of the workshop items according to
@@ -92,10 +95,11 @@ func FileDetailsApiFromReader(r io.Reader, ids ...uint64) ([]FileDetailApi, erro
 			return nil, fmt.Errorf("unexpected file detail returned %d", detail.Id)
 		}
 		result[index] = FileDetailApi{
-			Id:          detail.Id,
-			TimeCreated: time.Unix(detail.TimeCreated, 0),
-			TimeUpdated: time.Unix(detail.TimeUpdated, 0),
-			Title:       detail.Title,
+			CreatorAppId: detail.CreatorAppId,
+			Id:           detail.Id,
+			TimeCreated:  time.Unix(detail.TimeCreated, 0),
+			TimeUpdated:  time.Unix(detail.TimeUpdated, 0),
+			Title:        detail.Title,
 		}
 	}
 

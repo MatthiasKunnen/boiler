@@ -35,10 +35,11 @@ func TestDatabaseJsonRoundtrip(t *testing.T) {
 		},
 		WorkshopItems: map[uint64]boiler.WorkshopItem{
 			463939057: {
-				Requires:    []uint64{120, 2},
-				TimeCreated: time.Unix(1758384867, 0),
-				TimeUpdated: time.Unix(1758384867, 0),
-				Title:       "Hello",
+				CreatorAppId: 10700,
+				Requires:     []uint64{120, 2},
+				TimeCreated:  time.Unix(1758384867, 0),
+				TimeUpdated:  time.Unix(1758384867, 0),
+				Title:        "Hello",
 			},
 		},
 	}

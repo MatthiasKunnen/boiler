@@ -12,6 +12,8 @@ type Database struct {
 }
 
 type WorkshopItem struct {
+	// The ID of the game that the workshop item relates to.
+	CreatorAppId int
 	// Time when the workshop item was last downloaded.
 	LastDownloaded time.Time
 	// Time when the details of the workshop item were last retrieved.

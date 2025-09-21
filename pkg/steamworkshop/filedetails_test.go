@@ -19,10 +19,11 @@ func TestFileDetailsApiFromReader(t *testing.T) {
 	assert.NoError(t, err)
 	expected := []steamworkshop.FileDetailApi{
 		{
-			Id:          463939057,
-			TimeCreated: time.Unix(1434653369, 0),
-			TimeUpdated: time.Unix(1752589679, 0),
-			Title:       "ace",
+			CreatorAppId: 107410,
+			Id:           463939057,
+			TimeCreated:  time.Unix(1434653369, 0),
+			TimeUpdated:  time.Unix(1752589679, 0),
+			Title:        "ace",
 		},
 	}
 	assert.Equal(t, expected, actual)
