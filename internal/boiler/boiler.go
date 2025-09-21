@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -181,7 +182,43 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 	if err != nil {
 		err = fmt.Errorf("error changing workshop items file casing to lower: %w", err)
 	}
-	return errors.Join(b.Save(), err)
+	return errors.Join(b.Save(), b.createSymlinks(), err)
+}
+
+func (b *Boiler) createSymlinks() error {
+	var resultErr error
+	for _, game := range b.gamesConfig {
+		skip := true
+		for _, idc := range game.WorkshopItems {
+			workshopItem, ok := b.db.WorkshopItems[idc.Id]
+			if !ok {
+				return fmt.Errorf("workshop item %d not found", idc.Id)
+			}
+			if workshopItem.LastDownloaded.IsZero() {
+				continue
+			}
+			skip = false
+			break
+		}
+		if skip {
+			continue
+		}
+		err := overwriteSymlink(
+			filepath.Join(
+				b.config.GamesDir,
+				SteamWorkshopItemPrefix,
+				strconv.Itoa(game.WorkshopAppId),
+			),
+			filepath.Join(b.config.GamesDir, game.Name, "mods"),
+		)
+		switch {
+		case errors.Is(err, os.ErrExist):
+		case err != nil:
+			resultErr = errors.Join(resultErr, err)
+		}
+	}
+
+	return resultErr
 }
 
 type UpdateOpts struct {
