@@ -52,12 +52,16 @@ func TestGameConfig_GetWorkshopItemsOrdered_WorkshopOnly(t *testing.T) {
 		},
 		WorkshopCollections: nil,
 	}
-	expected := []uint64{
+	expectedIds := []uint64{
 		50, 5, 4, 3, 1, 12, 11, 13, 14, 10, 180, 160, 140, 100,
 	}
 	actual, err := gc.GetWorkshopItemsOrdered(db)
+	actualIds := make([]uint64, 0, len(actual))
+	for _, id := range actual {
+		actualIds = append(actualIds, id.Id)
+	}
 	assert.NoError(t, err)
-	assert.Equal(t, expected, actual)
+	assert.Equal(t, expectedIds, actualIds)
 }
 
 func TestGameConfig_GetWorkshopItemsOrdered_WithCollections(t *testing.T) {
@@ -149,10 +153,14 @@ func TestGameConfig_GetWorkshopItemsOrdered_WithCollections(t *testing.T) {
 		},
 		WorkshopCollections: nil,
 	}
-	expected := []uint64{
+	expectedIds := []uint64{
 		50, 5, 4, 3, 1, 81, 91, 92, 93, 90, 11, 13, 14, 10, 180, 160, 140, 100,
 	}
 	actual, err := gc.GetWorkshopItemsOrdered(db)
+	actualIds := make([]uint64, 0, len(actual))
+	for _, id := range actual {
+		actualIds = append(actualIds, id.Id)
+	}
 	assert.NoError(t, err)
-	assert.Equal(t, expected, actual)
+	assert.Equal(t, expectedIds, actualIds)
 }

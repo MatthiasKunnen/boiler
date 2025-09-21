@@ -24,6 +24,11 @@ type WorkshopItem struct {
 	Title       string
 }
 
+type WorkshopItemWithId struct {
+	Id uint64
+	WorkshopItem
+}
+
 type Collection struct {
 	Items []CollectionItem
 }

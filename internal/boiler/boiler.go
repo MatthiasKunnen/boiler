@@ -72,8 +72,7 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 		if err != nil {
 			return err
 		}
-		for _, id := range ids {
-			item := b.db.WorkshopItems[id]
+		for _, item := range ids {
 			if !opts.DownloadUpToDate && item.LastDownloaded.After(item.TimeUpdated) {
 				continue
 			}
@@ -81,7 +80,7 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 				downOpts.DownloadWorkshopItems,
 				steamcmd.DownloadWorkshopItemOpts{
 					GameId:         gameConfig.WorkshopAppId,
-					WorkshopItemId: id,
+					WorkshopItemId: item.Id,
 				},
 			)
 		}

@@ -56,13 +56,13 @@ func (gc GameConfig) UpdateComments(db *Database) {
 	}
 }
 
-func (gc GameConfig) GetWorkshopItemsOrdered(db *Database) ([]uint64, error) {
+func (gc GameConfig) GetWorkshopItemsOrdered(db *Database) ([]WorkshopItemWithId, error) {
 	ids := make([]uint64, 0, len(gc.WorkshopItems))
 	for _, item := range gc.WorkshopItems {
 		ids = append(ids, item.Id)
 	}
 
-	var results []uint64
+	var results []WorkshopItemWithId
 	idsSeen := make(map[uint64]struct{})
 	results, err := gc.getWorkshopItemsOrdered(db, results, idsSeen, ids...)
 	if err != nil {
@@ -74,10 +74,10 @@ func (gc GameConfig) GetWorkshopItemsOrdered(db *Database) ([]uint64, error) {
 
 func (gc GameConfig) getWorkshopItemsOrdered(
 	db *Database,
-	result []uint64,
+	result []WorkshopItemWithId,
 	skip map[uint64]struct{},
 	ids ...uint64,
-) ([]uint64, error) {
+) ([]WorkshopItemWithId, error) {
 	var err error
 	for _, id := range ids {
 		if item, ok := db.WorkshopItems[id]; ok {
@@ -106,7 +106,10 @@ func (gc GameConfig) getWorkshopItemsOrdered(
 				continue
 			}
 			skip[id] = struct{}{}
-			result = append(result, id)
+			result = append(result, WorkshopItemWithId{
+				Id:           id,
+				WorkshopItem: item,
+			})
 		} else if collection, ok := db.Collections[id]; ok {
 			if _, ok := skip[id]; ok {
 				continue
