@@ -9,9 +9,9 @@ type GamesConfig []GameConfig
 
 type GameConfig struct {
 	Name                       string
-	Id                         uint64
+	Id                         int
 	BetaBranch                 string
-	WorkshopAppId              uint64
+	WorkshopAppId              int
 	MakeWorkshopItemsLowercase bool
 	WorkshopItems              []IdWithComment
 	WorkshopDependencyAdd      map[uint64][]IdWithComment

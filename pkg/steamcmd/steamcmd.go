@@ -24,13 +24,13 @@ type Opts struct {
 }
 
 type DownloadGameOpts struct {
-	Id         uint64
+	Id         int
 	BetaBranch string
 	Validate   bool
 }
 
 type DownloadWorkshopItemOpts struct {
-	GameId         uint64
+	GameId         int
 	WorkshopItemId uint64
 }
 
@@ -77,7 +77,7 @@ func Exec(ctx context.Context, opts Opts) error {
 	for _, game := range opts.DownloadGames {
 		sb.Reset()
 		sb.WriteString("app_update ")
-		sb.WriteString(strconv.FormatUint(game.Id, 10))
+		sb.WriteString(strconv.Itoa(game.Id))
 		if game.BetaBranch != "" {
 			sb.WriteString(" -beta ")
 			sb.WriteString(game.BetaBranch)
