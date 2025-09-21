@@ -44,6 +44,15 @@ func (b *Boiler) Save() error {
 	if err != nil {
 		return err
 	}
+
+	_, err = os.Stat(filepath.Join(b.config.GamesDir, SteamWorkshopSubDir))
+	if err == nil {
+		_ = os.Symlink(
+			filepath.Join(b.config.GamesDir, SteamWorkshopItemPrefix),
+			filepath.Join(b.config.GamesDir, "workshop"),
+		)
+	}
+
 	return nil
 }
 
