@@ -102,6 +102,7 @@ func (b *Boiler) changeWSItemCasing(toLower bool, items []WorkshopItemWithId) er
 type DownloadOpts struct {
 	DownloadUpToDate bool
 	Logout           bool
+	Validate         bool
 }
 
 func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
@@ -120,7 +121,7 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 		downOpts.DownloadGames = append(downOpts.DownloadGames, steamcmd.DownloadGameOpts{
 			Id:         gameConfig.Id,
 			BetaBranch: gameConfig.BetaBranch,
-			Validate:   false,
+			Validate:   opts.Validate,
 		})
 		ids, err := gameConfig.GetWorkshopItemsOrdered(b.db)
 		if err != nil {

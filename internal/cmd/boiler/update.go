@@ -16,6 +16,7 @@ var loginUsername string
 var logout bool
 var skipDatabaseUpdate bool
 var skipDownload bool
+var validate bool
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
@@ -55,6 +56,7 @@ are in games.json or are dependencies will be downloaded.
 			err = b.Download(ctx, boiler.DownloadOpts{
 				DownloadUpToDate: downloadUpToDate,
 				Logout:           logout,
+				Validate:         validate,
 			})
 			if err != nil {
 				log.Fatalf("failed to update: %v", err)
@@ -95,5 +97,11 @@ func init() {
 		"download-up-to-date",
 		false,
 		`Additionally, force download required workshop items that are up-to-date.`,
+	)
+	updateCmd.Flags().BoolVar(
+		&validate,
+		"validate",
+		false,
+		`Validates the game downloads.`,
 	)
 }
