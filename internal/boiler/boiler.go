@@ -104,8 +104,6 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 }
 
 type UpdateOpts struct {
-	Download      bool
-	LoginUsername string
 }
 
 // UpdateDatabase updates the database based on the games configuration.
