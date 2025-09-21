@@ -1,4 +1,5 @@
 package boiler
 
 const ConfigFilePath = "/etc/boiler/boiler.json"
-const SteamWorkshopDownloadDir = "steamapps/workshop/content"
+const SteamWorkshopSubDir = ".workshop"
+const SteamWorkshopItemPrefix = SteamWorkshopSubDir + "/steamapps/workshop/content"

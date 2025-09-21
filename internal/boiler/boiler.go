@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -54,12 +53,12 @@ func (b *Boiler) changeWSItemCasing(toLower bool, items []WorkshopItemWithId) er
 		return nil
 	}
 
-	basePath := path.Join(b.config.GamesDir, SteamWorkshopDownloadDir)
+	basePath := filepath.Join(b.config.GamesDir, SteamWorkshopItemPrefix)
 	if toLower {
 		var changedPaths []string
 		for _, item := range items {
 			suffix := item.PathContentSuffix()
-			p := path.Join(basePath, suffix)
+			p := filepath.Join(basePath, suffix)
 			err := filecasing.MakeLowerCase(p, func(original string) {
 				changedPaths = append(changedPaths, filepath.Join(suffix, original))
 			})
@@ -113,6 +112,7 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 		DownloadWorkshopItems: nil,
 		Logout:                opts.Logout,
 		SteamCmdPath:          b.config.SteamCmdPath,
+		WorkshopInstallDir:    filepath.Join(b.config.GamesDir, SteamWorkshopSubDir),
 	}
 
 	var filenameCasingUpdates []WorkshopItemWithId
@@ -121,6 +121,7 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 		downOpts.DownloadGames = append(downOpts.DownloadGames, steamcmd.DownloadGameOpts{
 			Id:         gameConfig.Id,
 			BetaBranch: gameConfig.BetaBranch,
+			Name:       gameConfig.Name,
 			Validate:   opts.Validate,
 		})
 		ids, err := gameConfig.GetWorkshopItemsOrdered(b.db)
