@@ -68,7 +68,7 @@ func (b *Boiler) changeWSItemCasing(toLower bool, items []WorkshopItemWithId) er
 			}
 		}
 
-		slices.DeleteFunc(b.db.PathChanges, func(p string) bool {
+		b.db.PathChanges = slices.DeleteFunc(b.db.PathChanges, func(p string) bool {
 			for _, item := range items {
 				if strings.HasPrefix(p, item.PathContentSuffix()) {
 					return true
