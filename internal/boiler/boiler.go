@@ -150,7 +150,9 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 	log.Printf("%d workshop items will be updated", len(downOpts.DownloadWorkshopItems))
 
 	err := b.changeWSItemCasing(false, filenameCasingUpdates)
-	if err != nil {
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+	case err != nil:
 		return fmt.Errorf("error restoring workshop items file casing: %w", err)
 	}
 	err = steamcmd.Exec(ctx, downOpts)
