@@ -74,7 +74,7 @@ var workshopItemsCmd = &cobra.Command{
 		}
 
 		for _, item := range result {
-			fmt.Println(item.Id)
+			fmt.Printf("%d # %s\n", item.Id, item.Title)
 		}
 	},
 }
