@@ -73,6 +73,8 @@ func Exec(ctx context.Context, opts Opts) error {
 	var workshopDownloadCommands []string
 	for _, item := range opts.DownloadWorkshopItems {
 		workshopDownloadCommands = append(workshopDownloadCommands, fmt.Sprintf(
+			// @todo this does not error on exit, unlike download_item though download_item
+			//       downloads to ~/.steam/steamcmd/linux32\steamapps\content\app_APP_ID\item_ID
 			"workshop_download_item %d %d",
 			item.GameId,
 			item.WorkshopItemId,
