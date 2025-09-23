@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -178,11 +179,31 @@ func (b *Boiler) Download(ctx context.Context, opts DownloadOpts) error {
 		b.db.WorkshopItems[downItem.WorkshopItemId] = item
 	}
 
-	err = b.changeWSItemCasing(true, filenameCasingUpdates)
-	if err != nil {
-		err = fmt.Errorf("error changing workshop items file casing to lower: %w", err)
+	resultErr := b.changeWSItemCasing(true, filenameCasingUpdates)
+	if resultErr != nil {
+		resultErr = fmt.Errorf("error changing workshop items file casing to lower: %w", resultErr)
 	}
-	return errors.Join(b.Save(), b.createSymlinks(), err)
+	resultErr = errors.Join(b.Save(), b.createSymlinks(), resultErr)
+
+	for _, gameConfig := range b.gamesConfig {
+		if gameConfig.PostInstall == "" {
+			continue
+		}
+		log.Printf("Running postinstall %s", gameConfig.PostInstall)
+		cmd := exec.CommandContext(ctx, gameConfig.PostInstall)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			resultErr = errors.Join(resultErr, fmt.Errorf(
+				"error running postinstall %s: %w",
+				gameConfig.PostInstall,
+				err,
+			))
+		}
+	}
+
+	return resultErr
 }
 
 func (b *Boiler) createSymlinks() error {

@@ -13,6 +13,7 @@ type GameConfig struct {
 	BetaBranch                 string
 	WorkshopAppId              int
 	MakeWorkshopItemsLowercase bool
+	PostInstall                string
 	WorkshopItems              []IdWithComment
 	WorkshopDependencyAdd      map[uint64][]IdWithComment
 	WorkshopDependencyRemove   map[uint64][]IdWithComment
